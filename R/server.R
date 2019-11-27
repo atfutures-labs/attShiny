@@ -57,7 +57,7 @@ shinyAppServer = function(input, output, session) {
         matching_file = system.file("net.Rds", package = "upthat")
       }
       message("Reading this matching file: ", matching_file)
-      net <<- readRDS(matching_file)
+      net = readRDS(matching_file)
       net$layer = net$flow
       plot_layer(net, input$layer, update_view = TRUE)
     }
