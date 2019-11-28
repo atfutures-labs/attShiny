@@ -14,6 +14,13 @@ shinyAppServer = function(input, output, session) {
     mapdeck::set_token(token = Sys.getenv("MAPBOX"))
   }
 
+  # load demo data if not there already
+  if(!exists("net")) {
+    matching_file = system.file("net.Rds", package = "upthat")
+    net = readRDS(matching_file)
+  }
+
+
   repo_sha = system("git rev-parse --short HEAD", intern = TRUE)
   output$app_info = renderText(
     paste(
@@ -48,16 +55,16 @@ shinyAppServer = function(input, output, session) {
     },
     {
       matching_file = rds_files_available[grepl(pattern = input$city, x = rds_files_available, ignore.case = TRUE)]
+      mmsg = paste(matching_file, collapse = ", ")
+      message(length(matching_file), " files found:", mmsg, "selecting the first")
       if (length(matching_file) > 1) {
-        mmsg = paste(matching_file, collapse = ", ")
-        message(length(matching_file), " files found:", mmsg, "selecting the first")
         matching_file = matching_file[1]
+      } else if (length(matching_file) == 1) {
+        message("Reading this matching file: ", matching_file)
+        net = readRDS(matching_file)
+      } else {
+        # message to user that the city is not yet online?
       }
-      if (length(matching_file) < 1) { # if there are no matches
-        matching_file = system.file("net.Rds", package = "upthat")
-      }
-      message("Reading this matching file: ", matching_file)
-      net = readRDS(matching_file)
       net$layer = net$flow
       plot_layer(net, input$layer, update_view = TRUE)
     }
