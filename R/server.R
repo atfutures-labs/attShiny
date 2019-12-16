@@ -67,7 +67,8 @@ shinyAppServer = function(input, output, session) {
         crashes <<- readRDS(crashes_file_name)
         crashes_exist <- TRUE
       }
-      net$layer = net$flow
+      net = get_layer (net, input$layer)
+      #net$layer = net$flow
       if(input$safety) {
         if (crashes_exist) {
           plot_map(net, input$layer, update_view = TRUE) %>%
@@ -87,26 +88,7 @@ shinyAppServer = function(input, output, session) {
       input$layer
     },
     {
-      if (input$layer == "Pedestrian flow") {
-        net$layer = net$flow
-      } else if (input$layer == "Vehicular flow") {
-        if ("centrality" %in% names(net)) {
-          net$layer = net$centrality
-        } else {
-          net$layer = net$flow
-        }
-      } else if (input$layer == "Vehicular emissions") {
-        if ("centrality_disp" %in% names(net)) {
-          net$layer = net$centrality_disp
-        } else {
-          net$layer = net$flow
-        }
-      } else if (input$layer == "Pedestrian exposure") {
-        net$layer = net$flow
-        if ("centrality_disp" %in% names(net)) {
-          net$layer = net$flow * net$centrality_disp
-        }
-      }
+      net = get_layer (net, input$layer)
       plot_map(net, input$layer, update_view = FALSE)
     }
   )
@@ -146,6 +128,30 @@ shinyAppServer = function(input, output, session) {
     print(x())
   })
 
+}
+
+get_layer = function(net, layer) {
+    if (layer == "Pedestrian flow") {
+        net$layer = net$flow
+    } else if (layer == "Vehicular flow") {
+        if ("centrality" %in% names(net)) {
+            net$layer = net$centrality
+        } else {
+            net$layer = net$flow
+        }
+    } else if (layer == "Vehicular emissions") {
+        if ("centrality_disp" %in% names(net)) {
+            net$layer = net$centrality_disp
+        } else {
+            net$layer = net$flow
+        }
+    } else if (layer == "Pedestrian exposure") {
+        net$layer = net$flow
+        if ("centrality_disp" %in% names(net)) {
+            net$layer = net$flow * net$centrality_disp
+        }
+    }
+    return(net)
 }
 
 plot_map = function(net, leg_title, update_view = FALSE) {
